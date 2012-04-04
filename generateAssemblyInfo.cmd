@@ -1,0 +1,1 @@
+ruby D:\During IBM\RiotControl\References\assemblyInfo.rb
