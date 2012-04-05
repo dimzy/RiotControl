@@ -56,22 +56,21 @@ namespace RiotControl
 			else
 				line = "\n" + line;
 
-			OutputTextBox.Dispatcher.Invoke
-			(
-				(Action)delegate
+			var action = (Action)delegate
+			{
+				lock (OutputTextBox)
 				{
-					lock (OutputTextBox)
-					{
-						OutputTextBox.AppendText(line);
-						OutputTextBox.ScrollToEnd();
-					}
+					OutputTextBox.AppendText(line);
+					OutputTextBox.ScrollToEnd();
 				}
-			);
+			};
+
+			OutputTextBox.Dispatcher.Invoke(action);
 		}
 
-		public void OnClosed(object sender, EventArgs arguments)
+		public void OnClosing(object sender, EventArgs arguments)
 		{
-			//Kill the application, SQLite has to suck it up
+			Program.Terminate();
 			Environment.Exit(0);
 		}
 
@@ -97,7 +96,10 @@ namespace RiotControl
 
 		public void BrowserButtonOnClick(object sender, EventArgs arguments)
 		{
-			string url = "http://" + Configuration.Web.Host;
+			string host = Configuration.Web.Host;
+			if (host == null || host.Length == 0)
+				host = "127.0.0.1";
+			string url = "http://" + host;
 			if (Configuration.Web.Port != 80)
 				url += string.Format(":{0}", Configuration.Web.Port);
 			url += "/";
