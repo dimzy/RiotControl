@@ -11,6 +11,8 @@
     <AssemblyName>RiotGear</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -123,6 +125,9 @@
     <Compile Include="Worker\UpdateSummonerByAccountId.cs" />
     <Compile Include="Worker\UpdateSummonerGame.cs" />
     <Compile Include="Worker\UpdateSummonerRankedStatistics.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

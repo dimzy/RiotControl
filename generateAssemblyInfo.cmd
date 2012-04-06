@@ -1,1 +1,1 @@
-ruby D:\During IBM\RiotControl\References\assemblyInfo.rb
+ruby D:\During" "IBM\AssemblyInfo\generateAssemblyInfo.rb

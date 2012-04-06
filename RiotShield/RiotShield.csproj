@@ -11,6 +11,8 @@
     <AssemblyName>RiotShield</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,7 +57,7 @@
       <HintPath>..\References\Nil.dll</HintPath>
     </Reference>
     <Reference Include="RiotGear">
-      <HintPath>..\RiotGear\bin\x86\Debug\RiotGear.dll</HintPath>
+      <HintPath>..\RiotGear\bin\Debug\RiotGear.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
