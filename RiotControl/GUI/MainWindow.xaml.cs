@@ -20,11 +20,15 @@ namespace RiotControl
 {
 	public partial class MainWindow : Window
 	{
+		const string Website = "http://riot.control-c.ir/";
+
 		Configuration Configuration;
 		StatisticsService StatisticsService;
 		Program Program;
 
 		bool IsFirstLine;
+
+		bool ShuttingDown;
 
 		public MainWindow(Configuration configuration, Program program, StatisticsService statisticsService)
 		{
@@ -36,19 +40,27 @@ namespace RiotControl
 
 			IsFirstLine = true;
 
+			ShuttingDown = false;
+
 			DataContext = new MainWindowDataContext(configuration);
 
 			Assembly entryAssembly = Assembly.GetEntryAssembly();
-
 			Version version = entryAssembly.GetName().Version;
 
-			Title = string.Format("Riot Control r{0} ({1})", version.Revision, Nil.Assembly.GetAssemblyBuildTime(entryAssembly));
+			Title = string.Format("Riot Control r{0}", version.Revision);
+			RevisionLabel.Content = string.Format("r{0}", version.Revision);
+			TimeLabel.Content = Nil.Assembly.GetAssemblyBuildTime(entryAssembly).ToString();
+			WebsiteLabel.Content = Website;
 
 			UpdateHelpLabel();
 		}
 
 		public void WriteLine(string line, params object[] arguments)
 		{
+			//Check if the application is shutting down to prevent timed invokes on the output text from piling up
+			if (ShuttingDown)
+				return;
+
 			line = string.Format(line, arguments);
 			line = string.Format("{0} {1}", Nil.Time.Timestamp(), line);
 			if (IsFirstLine)
@@ -70,8 +82,7 @@ namespace RiotControl
 
 		public void OnClosing(object sender, EventArgs arguments)
 		{
-			Program.Terminate();
-			Environment.Exit(0);
+			Process.GetCurrentProcess().Kill();
 		}
 
 		public void RegionGridOnSelectionChanged(object sender, EventArgs arguments)
@@ -105,6 +116,11 @@ namespace RiotControl
 			url += "/";
 
 			Process.Start(url);
+		}
+
+		public void WebsiteLabelClick(object sender, EventArgs arguments)
+		{
+			Process.Start(Website);
 		}
 
 		public void UpdateHelpLabel()
