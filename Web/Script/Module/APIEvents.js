@@ -82,16 +82,35 @@ function onGetSummonerProfileForMatchHistory(response, region)
     if(isSuccess(response))
     {
         var summoner = response.Summoner;
-        apiGetMatchHistory(region, summoner.AccountId, function (response) { onGetMatchHistory(response, region, summoner); });
+        apiGetMatchHistory(region, summoner.AccountId, function (response) { onGetMatchHistory(response, summoner); });
     }
     else
         showResponseError(response);
 }
 
-function onGetMatchHistory(response, region, summoner)
+function onGetMatchHistory(response, summoner)
 {
     if(isSuccess(response))
-        renderMatchHistory(region, summoner, response.Games);
+        renderMatchHistory(summoner, response.Games);
+    else
+        showResponseError(response);
+}
+
+function onGetSummonerProfileForRunes(response, region)
+{
+    if(isSuccess(response))
+    {
+        var summoner = response.Summoner;
+        apiGetSummonerRunes(region, summoner.AccountId, function (response) { onGetSummonerRunes(response, summoner); });
+    }
+    else
+        showResponseError(response);
+}
+
+function onGetSummonerRunes(response, summoner)
+{
+    if(isSuccess(response))
+        renderSummonerRunes(summoner, response.RunePages);
     else
         showResponseError(response);
 }

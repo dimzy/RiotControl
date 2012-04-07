@@ -51,8 +51,6 @@ namespace RiotGear
 		public Worker(IGlobalHandler globalHandler, StatisticsService statisticsService, EngineRegionProfile regionProfile, Configuration configuration, Database provider)
 		{
 			Running = false;
-			//Create the thread object early to avoid having to lock it to avoid race conditions on the join in Terminate
-			AutomaticUpdatesThread = new Thread(RunAutomaticUpdates);
 
 			GlobalHandler = globalHandler;
 			StatisticsService = statisticsService;
@@ -60,6 +58,10 @@ namespace RiotGear
 
 			Configuration = configuration;
 			Profile = regionProfile;
+
+			//Create the thread object early to avoid having to lock it to avoid race conditions on the join in Terminate
+			AutomaticUpdatesThread = new Thread(RunAutomaticUpdates);
+			AutomaticUpdatesThread.Name = string.Format("{0} Automatic updates", Profile.Description);
 
 			Connected = false;
 
@@ -114,7 +116,7 @@ namespace RiotGear
 			
 		}
 
-		public void WaitForTermination()
+		public void WaitForUpdateThread()
 		{
 			try
 			{
@@ -177,7 +179,7 @@ namespace RiotGear
 				{
 					Connected = true;
 					WriteLine("Successfully connected to the server");
-					AutomaticUpdatesThread.Name = string.Format("{0} Automatic updates", Profile.Description);
+					TerminateUpdateThread();
 					AutomaticUpdatesThread.Start();
 				}
 				else
@@ -193,6 +195,13 @@ namespace RiotGear
 			}
 		}
 
+		void TerminateUpdateThread()
+		{
+			TerminationEvent.Set();
+			WaitForUpdateThread();
+			TerminationEvent.Reset();
+		}
+
 		void OnDisconnect()
 		{
 			//You get disconnected after idling for two hours
@@ -200,7 +209,8 @@ namespace RiotGear
 			WriteLine("Disconnected");
 			if (Running)
 			{
-				//Reconnect
+				//Shut down the automatic update thread and reconnect
+				TerminateUpdateThread();
 				TerminationEvent.WaitOne(Configuration.ReconnectDelay);
 				ConnectInThread();
 			}

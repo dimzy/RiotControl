@@ -85,6 +85,10 @@ function getRequest()
     var path = url.substring(offset + 1);
     if(path.length == 0)
         return null;
+    //Remove hash component
+    offset = path.indexOf('#');
+    if(offset != -1)
+        path = path.substring(0, offset);
     var tokens = path.split(separator);
     if(tokens.length == 0)
         return null;
@@ -307,4 +311,41 @@ function getSearchRegion()
             return region;
     }
     return null;
+}
+
+function processSummonerRequest(requestArguments, handler)
+{
+    try
+    {
+        var request = getSummonerRequest(requestArguments);
+    }
+    catch(exception)
+    {
+        if(exception.message)
+            exception = exception.message;
+        showError(exception);
+        return;
+    }
+    handler(request.region, request.accountId);
+}
+
+function trace()
+{
+    if(console !== undefined)
+        console.trace();
+}
+
+function log(object)
+{
+    if(console !== undefined)
+        console.log(object);
+}
+
+function getRegion(identifier)
+{
+    var region = system.regions[identifier];
+    if(region === undefined)
+        return null;
+    else
+        return region;
 }
