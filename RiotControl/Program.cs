@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
@@ -8,7 +10,7 @@ using RiotGear;
 
 namespace RiotControl
 {
-	public class Program : IGlobalHandler
+	public class Program : IGlobalHandler, IUpdateHandler
 	{
 		const string ConfigurationPath = "Configuration.xml";
 		const string ErrorFilePath = "Error.txt";
@@ -20,17 +22,21 @@ namespace RiotControl
 
 		StatisticsService StatisticsService;
 		WebService WebService;
+		UpdateService UpdateService;
 
 		public Program()
 		{
 			Serialiser = new Nil.Serialiser<Configuration>(ConfigurationPath);
 			Configuration = Serialiser.Load();
+			//Check for configuration errors
+			Configuration.Check();
 			//Store it right away to automatically remove unused content and provide new default values
 			Serialiser.Store(Configuration);
 
 			Database databaseProvider = new Database(Configuration);
 			StatisticsService = new StatisticsService(this, Configuration, databaseProvider);
 			WebService = new WebService(this, Configuration, StatisticsService, databaseProvider);
+			UpdateService = new UpdateService(Configuration, this, this);
 
 			MainWindow = new MainWindow(Configuration, this, StatisticsService);
 		}
@@ -44,14 +50,16 @@ namespace RiotControl
 		{
 			WebService.Run();
 			StatisticsService.Run();
+			UpdateService.Cleanup();
+			if (Configuration.Updates.EnableAutomaticUpdates)
+				UpdateService.Run();
 			MainWindow.ShowDialog();
 		}
 
-		//Interface implementation
+#region IGlobalHandler interface
 
 		public void WriteLine(string line, params object[] arguments)
 		{
-			//Nil.Output.WriteLine(line, arguments);
 			MainWindow.WriteLine(line, arguments);
 		}
 
@@ -59,6 +67,33 @@ namespace RiotControl
 		{
 			DumpAndTerminate(exception);
 		}
+
+#endregion
+
+#region IUpdateHandler interface
+
+		public void UpdateDetected(int currentRevision, ApplicationVersion newVersion)
+		{
+			MainWindow.StartUpdate(newVersion);
+			UpdateService.DownloadUpdate();
+		}
+
+		public void DownloadProgressUpdate(DownloadProgressChangedEventArgs arguments)
+		{
+			MainWindow.DownloadProgressUpdate(arguments);
+		}
+
+		public void DownloadCompleted()
+		{
+			UpdateService.ApplyUpdate();
+		}
+
+		public void DownloadError(Exception exception)
+		{
+			MainWindow.DownloadError(exception);
+		}
+
+#endregion
 
 		public void Terminate()
 		{
@@ -86,7 +121,7 @@ namespace RiotControl
 				writer.Write(message);
 				writer.Close();
 			}
-			MessageBox.Show(string.Format("An exception of type {0} occurred. An error log file ({1}) has been created. The application will now terminate.", exception.GetType().ToString(), ErrorFilePath), "Error");
+			MessageBox.Show(string.Format("An exception of type {0} occurred:\n\n{1}\n\nAn error log file (\"{2}\") has been created. The application will now terminate.", exception.GetType().ToString(), exception.Message, ErrorFilePath), "Error");
 			Environment.Exit(1);
 		}
 
